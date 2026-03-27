@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>NutriXLab | 智能营养评分引擎</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/tesseract.js@5.0.5/dist/tesseract.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #E8F0F5 0%, #D4E3EC 100%);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+        .container { max-width: 1280px; margin: 0 auto; }
+        .logo-section { text-align: center; margin-bottom: 2rem; }
+        .logo { font-size: 3.2rem; font-weight: 800; letter-spacing: -1px; color: #2C6280; }
+        /* 移除了原先的lang-badge和tagline中关于“双语识别”的强提示，但保留核心引擎的英文解析能力 */
+        .tagline { color: #4A7C94; font-size: 1rem; font-weight: 500; margin-top: 0.5rem; }
+        .main-card { background: white; border-radius: 2rem; box-shadow: 0 20px 40px rgba(44, 98, 128, 0.12); overflow: hidden; border: 1px solid rgba(106, 159, 181, 0.25); }
+        .upload-section { padding: 2.5rem 2rem; background: #FFFFFF; border-bottom: 1px solid #D9E6EF; }
+        .upload-title { text-align: center; margin-bottom: 1.8rem; }
+        .upload-title h2 { font-size: 1.6rem; font-weight: 600; color: #2C6280; margin-bottom: 0.5rem; }
+        .upload-title p { color: #6A9FB5; font-size: 0.9rem; }
+        .upload-zone { border: 3px dashed #B8D4E2; background: #FCFEFF; border-radius: 1.5rem; padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; max-width: 600px; margin: 0 auto; }
+        .upload-zone:hover { border-color: #6A9FB5; background: #F5FAFD; transform: translateY(-2px); }
+        .upload-zone i { font-size: 3.5rem; color: #6A9FB5; margin-bottom: 1rem; }
+        .upload-zone p { color: #4A7C94; font-weight: 500; margin: 0.5rem 0; }
+        .upload-btn { background: #6A9FB5; color: white; border: none; padding: 10px 28px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; margin-top: 1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .upload-btn:hover { background: #4A7C94; transform: scale(0.98); }
+        .ocr-status { margin-top: 1rem; font-size: 0.85rem; font-weight: 500; color: #2C6280; background: #EFF6FA; display: inline-block; padding: 0.3rem 1rem; border-radius: 30px; }
+        .preview-area { background: #F0F7FB; border-radius: 1rem; padding: 1rem; margin-top: 1.2rem; max-width: 600px; margin-left: auto; margin-right: auto; display: none; border-left: 3px solid #6A9FB5; }
+        .preview-area.show { display: block; }
+        .preview-text { font-size: 0.75rem; color: #2C6280; max-height: 150px; overflow-y: auto; word-break: break-word; line-height: 1.5; font-family: monospace; white-space: pre-wrap; }
+        .result-section { padding: 2rem; background: white; }
+        .result-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.8rem; padding-bottom: 1rem; border-bottom: 2px solid #E0EEF5; }
+        .result-header h3 { font-size: 1.3rem; font-weight: 600; color: #2C6280; }
+        .badge-model { background: #E8F0F5; padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.75rem; font-weight: 600; color: #4A7C94; }
+        .score-dashboard { display: flex; flex-direction: column; align-items: center; margin: 1.5rem 0; }
+        .circular-chart { width: 200px; height: 200px; }
+        .circle-bg { stroke: #D9E6EF; stroke-width: 12; fill: none; }
+        .circle-progress { stroke: #6A9FB5; stroke-width: 12; fill: none; stroke-linecap: round; transition: stroke-dasharray 0.8s ease; }
+        .score-number { font-size: 2.5rem; font-weight: 800; fill: #2C6280; dominant-baseline: middle; text-anchor: middle; }
+        .grade-text { font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; color: #6A9FB5; }
+        .ai-summary { background: linear-gradient(135deg, #F0F7FB 0%, #E8F0F5 100%); border-radius: 1.2rem; padding: 1.5rem; margin: 1.5rem 0; border-left: 5px solid #6A9FB5; }
+        .ai-summary h4 { font-size: 1rem; font-weight: 700; color: #2C6280; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 8px; }
+        .summary-content { font-size: 0.95rem; line-height: 1.6; color: #2C5A6E; }
+        .dimensions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .dim-card { background: #F8FCFE; border-radius: 1rem; padding: 1rem; border: 1px solid #D9E6EF; transition: all 0.2s; }
+        .dim-title { font-weight: 700; font-size: 0.85rem; color: #2C6280; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+        .dim-bar { height: 6px; background: #D9E6EF; border-radius: 10px; overflow: hidden; margin: 0.5rem 0; }
+        .dim-fill { height: 100%; background: #6A9FB5; border-radius: 10px; width: 0%; transition: width 0.5s; }
+        .dim-score { font-size: 0.7rem; color: #6A9FB5; }
+        .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(106, 159, 181, 0.3); border-top-color: #6A9FB5; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none; }
+        .btn-reset { background: transparent; border: 1px solid #B8D4E2; padding: 0.5rem 1.2rem; border-radius: 40px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; color: #4A7C94; font-weight: 500; }
+        .btn-reset:hover { background: #E8F0F5; border-color: #6A9FB5; }
+        footer { text-align: center; margin-top: 2rem; font-size: 0.75rem; color: #8BB0C2; }
+        .confidence-note { font-size: 0.7rem; color: #7CA2B6; background: #F0F7FB; padding: 0.5rem 1rem; border-radius: 40px; display: inline-block; margin-top: 0.8rem; }
+        .project-footer { text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(106, 159, 181, 0.2); font-size: 0.7rem; }
+        .match-tag { font-size: 0.65rem; background: #E1F0F5; padding: 0.2rem 0.5rem; border-radius: 20px; display: inline-block; margin-top: 6px; color: #2C6280; }
+        .warning-tag { background: #FFE9E0; color: #C95A2E; }
+        .positive-tag { background: #E0F2E9; color: #2E7D5E; }
+        .detected-lang { font-size: 0.7rem; color: #6A9FB5; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo-section">
+        <!-- 主视觉标语已清除原先 "双语智能营养评分引擎" 字样，只保留品牌名 -->
+        <div class="logo">NutriXLab</div>
+        <div class="tagline">智能OCR提取 · 循证营养评分引擎 | 支持成分/剂量/证据综合分析</div>
+    </div>
+    <div class="main-card">
+        <div class="upload-section">
+            <div class="upload-title">
+                <h2>上传产品图片 <i class="fas fa-image"></i></h2>
+                <p>支持进口保健品、营养补充剂标签 — AI智能识别图文信息，客观评分</p>
+            </div>
+            <div class="upload-zone" id="uploadZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>点击或拖拽图片至此</p>
+                <p style="font-size: 0.75rem;">JPG / PNG | 自动提取中英文营养成分与认证信息</p>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                <button class="upload-btn" id="triggerUploadBtn"><i class="fas fa-camera"></i> 选择图片 / 拍照上传</button>
+                <div id="ocrStatus" class="ocr-status"></div>
+            </div>
+            <div id="previewArea" class="preview-area">
+                <div class="preview-text" id="previewText"></div>
+                <div id="detectedLangHint" class="detected-lang"></div>
+            </div>
+        </div>
+        <div id="resultSection" class="result-section hidden">
+            <div class="result-header">
+                <h3><i class="fas fa-chart-line"></i> 智能营养分析报告</h3>
+                <span class="badge-model"><i class="fas fa-microchip"></i> 循证评分模型</span>
+            </div>
+            <div class="score-dashboard">
+                <svg viewBox="0 0 220 220" class="circular-chart">
+                    <circle cx="110" cy="110" r="96" class="circle-bg" stroke-width="12" fill="none"></circle>
+                    <circle cx="110" cy="110" r="96" class="circle-progress" stroke-width="12" fill="none" stroke-dasharray="0 603" transform="rotate(-90 110 110)"></circle>
+                    <text x="110" y="110" class="score-number" id="scoreNumber">0</text>
+                </svg>
+                <div class="grade-text" id="gradeLetter">等待分析</div>
+            </div>
+            <div class="ai-summary">
+                <h4><i class="fas fa-microchip"></i> AI 综合分析结论</h4>
+                <div class="summary-content" id="aiSummaryText">上传产品图片后，AI将提取文字信息并进行客观评分。</div>
+            </div>
+            <div>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.8rem; color: #2C6280;"><i class="fas fa-chart-simple"></i> 评分维度详情</h4>
+                <div id="dimensionsContainer" class="dimensions-grid"></div>
+            </div>
+            <div style="text-align: center; margin-top: 0.5rem;">
+                <div id="confidenceNote" class="confidence-note"></div>
+            </div>
+            <div style="text-align: center; margin-top: 1.8rem;">
+                <button id="resetBtn" class="btn-reset"><i class="fas fa-undo-alt"></i> 重新分析其他产品</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div>NutriXLab · 智能营养分析引擎 | 支持中英文内容提取及综合评估</div>
+        <div class="project-footer">客观评分 · 成分证据库 + 剂量判读 | 全语种关键词匹配技术</div>
+    </footer>
+</div>
+
+
+<script>
+    // ============================================================
+    // 升级版评分引擎
+    // 重点修复：
+    // 1) SVG 中央分数刷新
+    // 2) OCR 结果不再只比字多，加入结构质量评分
+    // 3) 增加成分-剂量配对逻辑
+    // 4) 安全性改为中性起点，资料不足时不再虚高
+    // 5) 加入常见成分的剂量安全/有效量判断
+    // ============================================================
+
+    const DIMENSIONS_META = [
+        { id: "evidence", name: "📚 科学证据等级", weight: 0.30, description: "临床研究、RCT、Meta分析、学术文献" },
+        { id: "formula", name: "🌿 配方适合度", weight: 0.25, description: "功能成分、剂量完整度、配方结构" },
+        { id: "certification", name: "🏅 认证与合规", weight: 0.22, description: "蓝帽/FDA/GMP/ISO/正规渠道" },
+        { id: "safety", name: "🛡️ 安全性评估", weight: 0.23, description: "剂量风险、过敏原、警示与合规记录" }
+    ];
+
+    const INGREDIENT_PATTERNS = [
+        { key: 'vitamin a', label: 'Vitamin A', patterns: [/vitamin\s*a\b/i, /\bva\b/i, /视黄醇|维生素a/i] },
+        { key: 'vitamin b6', label: 'Vitamin B6', patterns: [/vitamin\s*b6\b/i, /pyridoxine/i, /维生素b6/i] },
+        { key: 'vitamin b complex', label: 'Vitamin B Complex', patterns: [/vitamin\s*b\s*complex/i, /\bb\s*complex\b/i, /维生素b族|维生素b复合/i] },
+        { key: 'vitamin c', label: 'Vitamin C', patterns: [/vitamin\s*c\b/i, /\bvc\b/i, /ascorbic acid/i, /维生素c/i] },
+        { key: 'vitamin d', label: 'Vitamin D', patterns: [/vitamin\s*d\b/i, /\bvd\b/i, /cholecalciferol/i, /维生素d/i] },
+        { key: 'vitamin e', label: 'Vitamin E', patterns: [/vitamin\s*e\b/i, /\bve\b/i, /tocopherol/i, /维生素e/i] },
+        { key: 'zinc', label: 'Zinc', patterns: [/\bzinc\b/i, /锌/] },
+        { key: 'selenium', label: 'Selenium', patterns: [/\bselenium\b/i, /硒/] },
+        { key: 'magnesium', label: 'Magnesium', patterns: [/\bmagnesium\b/i, /镁/] },
+        { key: 'manganese', label: 'Manganese', patterns: [/\bmanganese\b/i, /锰/] },
+        { key: 'glucosamine', label: 'Glucosamine', patterns: [/\bglucosamine\b/i, /氨基葡萄糖/] },
+        { key: 'chondroitin', label: 'Chondroitin', patterns: [/\bchondroitin\b/i, /软骨素/] },
+        { key: 'hyaluronic acid', label: 'Hyaluronic Acid', patterns: [/hyaluronic acid/i, /透明质酸|玻尿酸/] },
+        { key: 'calcium fructoborate', label: 'Calcium Fructoborate', patterns: [/calcium fructoborate/i] },
+        { key: 'omega-3', label: 'Omega-3', patterns: [/omega[-\s]?3/i, /\bdha\b/i, /\bepa\b/i, /欧米伽3|鱼油/] },
+        { key: 'probiotic', label: 'Probiotic', patterns: [/probiotic/i, /益生菌/] },
+        { key: 'collagen', label: 'Collagen', patterns: [/collagen/i, /胶原蛋白/] },
+        { key: 'coq10', label: 'CoQ10', patterns: [/coq\s*10/i, /coq\s*1[o0]/i, /coenzyme\s*q\s*10/i, /辅酶q\s*10/i, /辅酶q\s*1[o0]/i, /辅酶\s*q/i, /\bq10\b/i] }
+    ];
+
+    const DOSAGE_RULES = {
+        'Vitamin A': { effectiveMinMcg: 300, upperMcg: 3000, cautionMcg: 2500 },
+        'Vitamin B6': { effectiveMinMg: 1.3, upperMg: 100, cautionMg: 50 },
+        'Vitamin C': { effectiveMinMg: 100, upperMg: 2000, cautionMg: 1200 },
+        'Vitamin D': { effectiveMinMcg: 10, upperMcg: 100, cautionMcg: 50 },
+        'Vitamin E': { effectiveMinMg: 10, upperMg: 1000, cautionMg: 300 },
+        'Zinc': { effectiveMinMg: 5, upperMg: 40, cautionMg: 25 },
+        'Selenium': { effectiveMinMcg: 40, upperMcg: 400, cautionMcg: 200 },
+        'Magnesium': { effectiveMinMg: 50, upperMg: 350, cautionMg: 300 },
+        'Manganese': { effectiveMinMg: 1, upperMg: 11, cautionMg: 8 },
+        'Glucosamine': { effectiveMinMg: 1200, upperMg: 3000 },
+        'Chondroitin': { effectiveMinMg: 200, upperMg: 2000 },
+        'Hyaluronic Acid': { effectiveMinMg: 1, upperMg: 200 },
+        'Calcium Fructoborate': { effectiveMinMg: 100, upperMg: 500 },
+        'CoQ10': { effectiveMinMg: 30, upperMg: 500, cautionMg: 300 }
+    };
+
+    const EVIDENCE_INGREDIENT_RULES = [
+        { ingredients: ['Glucosamine', 'Chondroitin'], score: 18, label: '关节经典组合（有较多临床研究积累）' },
+        { ingredients: ['Omega-3'], score: 16, label: 'Omega-3 类成分（临床研究较多）' },
+        { ingredients: ['CoQ10'], score: 14, label: 'CoQ10 成分（有一定人体研究）' },
+        { ingredients: ['Probiotic'], score: 14, label: '益生菌类成分（菌株依赖，但常见研究较多）' },
+        { ingredients: ['Collagen', 'Hyaluronic Acid'], score: 12, label: '美容/关节支持组合（有人体研究基础）' },
+        { ingredients: ['Vitamin D', 'Magnesium', 'Zinc', 'Vitamin C'], score: 10, label: '基础营养支持成分（有营养学与指南依据）' }
+    ];
+
+    const EVIDENCE_DB = {
+        'Glucosamine': { evidenceTier: 'A', baseScore: 22, effectiveMinMg: 1200, strongDoseMg: 1500, label: '氨糖（关节方向研究较多）' },
+        'Chondroitin': { evidenceTier: 'B+', baseScore: 16, effectiveMinMg: 200, strongDoseMg: 800, label: '软骨素（常见于关节复方）' },
+        'Omega-3': { evidenceTier: 'A', baseScore: 20, effectiveMinMg: 500, strongDoseMg: 1000, label: 'Omega-3（EPA/DHA 方向研究较多）' },
+        'CoQ10': { evidenceTier: 'B+', baseScore: 15, effectiveMinMg: 30, strongDoseMg: 100, label: 'CoQ10（心血管/能量方向有人体研究）' },
+        'Probiotic': { evidenceTier: 'B', baseScore: 14, label: '益生菌（证据受菌株与活菌数影响）' },
+        'Collagen': { evidenceTier: 'B', baseScore: 12, effectiveMinMg: 2500, strongDoseMg: 5000, label: '胶原蛋白（美容/关节方向有人体研究）' },
+        'Hyaluronic Acid': { evidenceTier: 'B', baseScore: 11, effectiveMinMg: 1, strongDoseMg: 60, label: '透明质酸（口服证据有限但存在）' },
+        'Vitamin D': { evidenceTier: 'A-', baseScore: 18, effectiveMinMcg: 10, strongDoseMcg: 25, label: '维生素D（指南与基础研究较完整）' },
+        'Vitamin C': { evidenceTier: 'A-', baseScore: 14, effectiveMinMg: 100, strongDoseMg: 500, label: '维生素C（基础营养学证据完整）' },
+        'Vitamin E': { evidenceTier: 'B', baseScore: 10, effectiveMinMg: 10, strongDoseMg: 100, label: '维生素E（营养支持证据中等）' },
+        'Zinc': { evidenceTier: 'A-', baseScore: 14, effectiveMinMg: 5, strongDoseMg: 10, label: '锌（营养支持证据较完整）' },
+        'Selenium': { evidenceTier: 'B', baseScore: 10, effectiveMinMcg: 40, strongDoseMcg: 100, label: '硒（基础营养支持证据中等）' },
+        'Magnesium': { evidenceTier: 'A-', baseScore: 14, effectiveMinMg: 50, strongDoseMg: 150, label: '镁（基础营养支持证据较完整）' },
+        'Manganese': { evidenceTier: 'B-', baseScore: 8, effectiveMinMg: 1, strongDoseMg: 2, label: '锰（营养支持证据较弱）' },
+        'Calcium Fructoborate': { evidenceTier: 'B-', baseScore: 9, effectiveMinMg: 100, strongDoseMg: 200, label: 'Calcium Fructoborate（特定方向有人体研究）' }
+    };
+
+    const CERTIFICATION_SIGNAL_RULES = [
+        { regex: /蓝帽|保健食品|国食健字|小蓝帽|health food certification/i, score: 28, hits: 2, label: '蓝帽保健食品认证', tier: 'strong' },
+        { regex: /usp verified|\busp\b|\bnsf\b|third party tested|third-party tested|cGMP|\bgmp\b|iso\d+|iso认证/i, score: 18, hits: 1, label: '第三方/GMP/ISO认证', tier: 'strong' },
+        { regex: /fda registered|fda注册|fda备案|nmpa|ema certified|进口备案|import license|\bsc\b|食品生产许可证|执行标准|gb标准|备案号|批准文号|license no/i, score: 14, hits: 1, label: '备案/生产许可信息', tier: 'strong' },
+        { regex: /官方旗舰店|official store|official website|brand store|authorized|授权经销|正规进口|cross-border|跨境|pharmacy|drugstore|amazon|iherb|costco|trusted retailer/i, score: 6, hits: 1, label: '可信销售渠道', tier: 'medium' },
+        { regex: /manufactured by|distributed by|made in|product of|生产商|制造商|经销商|委托方|地址|厂址|产地|原产国|进口商/i, score: 8, hits: 1, label: '基础生产/来源信息', tier: 'medium' },
+        { regex: /lot|batch|expiry|exp\.? date|best before|生产日期|保质期|批号|批次|有效期/i, score: 5, hits: 1, label: '批号/效期信息完整', tier: 'medium' }
+    ];
+
+    function normalizeSpaces(str) {
+        return String(str || '').replace(/[|¦｜]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch] || ch));
+    }
+
+    function standardizeUnit(unit) {
+        const u = String(unit || '').toLowerCase();
+        if (u.includes('mcg') || u.includes('μg') || u.includes('ug')) return 'mcg';
+        if (u.includes('mg')) return 'mg';
+        if (u.includes('g')) return 'g';
+        if (u.includes('iu')) return 'IU';
+        return u;
+    }
+
+    function convertAmountToBase(amount, unit) {
+        const n = Number(amount);
+        const u = standardizeUnit(unit);
+        if (!Number.isFinite(n)) return null;
+        if (u === 'g') return { mg: n * 1000, unit: 'mg' };
+        if (u === 'mg') return { mg: n, unit: 'mg' };
+        if (u === 'mcg') return { mcg: n, unit: 'mcg' };
+        if (u === 'IU') return { iu: n, unit: 'IU' };
+        return null;
+    }
+
+
+    function normalizeOcrText(str) {
+        return String(str || '')
+            .replace(/[₀]/g, '0')
+            .replace(/[₁]/g, '1')
+            .replace(/[₂]/g, '2')
+            .replace(/[₃]/g, '3')
+            .replace(/[₄]/g, '4')
+            .replace(/[₅]/g, '5')
+            .replace(/[₆]/g, '6')
+            .replace(/[₇]/g, '7')
+            .replace(/[₈]/g, '8')
+            .replace(/[₉]/g, '9')
+            .replace(/辅酶\s*q\s*1\s*o/ig, '辅酶Q10')
+            .replace(/辅酶\s*q\s*i\s*o/ig, '辅酶Q10')
+            .replace(/coq\s*1\s*o/ig, 'CoQ10')
+            .replace(/[，、；]/g, ' ')
+            .replace(/[（【]/g, '(')
+            .replace(/[）】]/g, ')')
+            .replace(/每\s*100\s*g/ig, ' per100g ')
+            .replace(/每\s*粒/g, ' per serving ')
+            .replace(/每\s*片/g, ' per serving ')
+            .replace(/每\s*袋/g, ' per serving ')
+            .replace(/每\s*份/g, ' per serving ')
+            .replace(/amount\s*per\s*serving/ig, ' amount per serving ')
+            .replace(/servings?\s*per\s*container/ig, ' servings per container ')
+            .replace(/[Oo](?=\s*(mg|mcg|g|iu)\b)/g, '0')
+            .replace(/l(?=\s*(mg|mcg|g|iu)\b)/ig, '1')
+            .replace(/(\d)\s*[,，]\s*(\d)/g, '$1$2')
+            .replace(/(\d)(mg|mcg|g|iu)\b/ig, '$1 $2')
+            .replace(/([a-zA-Z\u4e00-\u9fa5])[:：]\s*(\d)/g, '$1 $2')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function splitColumns(line) {
+        return String(line || '')
+            .split(/\s{3,}|\t|\s\|\s|\s{1,}(?=vitamin\s+[a-z]|zinc\b|selenium\b|magnesium\b|manganese\b|glucosamine\b|chondroitin\b|hyaluronic\s+acid|coq\s*10|辅酶q\s*10|锌|硒|镁|锰)/ig)
+            .map(part => normalizeSpaces(part))
+            .filter(Boolean);
+    }
+
+    function amountLooksDensity(line) {
+        return /per100g|每100g|每100毫升|每100ml/i.test(line);
+    }
+
+    function getIngredientMentions(line) {
+        const compact = normalizeSpaces(line);
+        const mentions = [];
+        for (const item of INGREDIENT_PATTERNS) {
+            for (const p of item.patterns) {
+                const m = compact.match(p);
+                if (m) {
+                    mentions.push({
+                        label: item.label,
+                        index: (m.index || compact.toLowerCase().indexOf(String(m[0]).toLowerCase()))
+                    });
+                    break;
+                }
+            }
+        }
+        return mentions.sort((a, b) => (a.index || 0) - (b.index || 0));
+    }
+
+    function addIngredientPair(target, seen, ingredient, amount, unit, source, meta = {}) {
+        const value = Number(amount);
+        const normalizedUnit = standardizeUnit(unit);
+        if (!ingredient || !Number.isFinite(value) || !normalizedUnit) return;
+        const key = `${ingredient}-${value}-${normalizedUnit}-${meta.context || ''}-${meta.density ? 'density' : 'serving'}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        target.push({
+            ingredient,
+            amount: value,
+            unit: normalizedUnit,
+            source,
+            context: meta.context || '',
+            density: !!meta.density
+        });
+    }
+
+    function detectIngredientLabel(line) {
+        const compact = normalizeSpaces(line);
+        for (const item of INGREDIENT_PATTERNS) {
+            if (item.patterns.some(p => p.test(compact))) return item.label;
+        }
+        return null;
+    }
+
+    function findAmounts(line) {
+        const results = [];
+        const normalized = normalizeOcrText(line);
+        const regex = /(\d+(?:[.,]\d+)?)\s*(mcg|μg|ug|mg|g|iu)\+?/ig;
+        let m;
+        while ((m = regex.exec(normalized)) !== null) {
+            results.push({
+                value: parseFloat(String(m[1]).replace(',', '')),
+                unit: standardizeUnit(m[2]),
+                index: m.index
+            });
+        }
+        return results;
+    }
+
+    function parseStructuredNutrition(rawText) {
+        const normalized = normalizeOcrText(rawText);
+        const rawLines = String(normalized || '')
+            .split(/\n+/)
+            .map(line => normalizeSpaces(line))
+            .filter(Boolean);
+
+        const lines = [];
+        for (const rawLine of rawLines) {
+            const parts = splitColumns(rawLine);
+            if (parts.length > 1) lines.push(...parts);
+            else lines.push(rawLine);
+        }
+
+        const ingredientPairs = [];
+        const seen = new Set();
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const label = detectIngredientLabel(line);
+            const mentions = getIngredientMentions(line);
+            const currentAmounts = findAmounts(line);
+            const density = amountLooksDensity(line);
+
+            if (mentions.length >= 1 && currentAmounts.length >= 1) {
+                for (const mention of mentions) {
+                    let closest = currentAmounts[0];
+                    let bestDistance = Infinity;
+                    for (const amount of currentAmounts) {
+                        const distance = Math.abs((mention.index || 0) - amount.index);
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                            closest = amount;
+                        }
+                    }
+                    if (closest) addIngredientPair(ingredientPairs, seen, mention.label, closest.value, closest.unit, line, { context: 'same-line', density });
+                }
+                continue;
+            }
+
+            if (label && i + 1 < lines.length) {
+                const nextLine = lines[i + 1];
+                const nextLineAmounts = findAmounts(nextLine);
+                if (nextLineAmounts.length === 1) {
+                    addIngredientPair(ingredientPairs, seen, label, nextLineAmounts[0].value, nextLineAmounts[0].unit, `${line} / ${nextLine}`, { context: 'next-line', density: density || amountLooksDensity(nextLine) });
+                    continue;
+                }
+            }
+
+            if (label && i + 2 < lines.length) {
+                const merged = `${lines[i + 1]} ${lines[i + 2]}`;
+                const laterAmounts = findAmounts(merged);
+                if (laterAmounts.length === 1) {
+                    addIngredientPair(ingredientPairs, seen, label, laterAmounts[0].value, laterAmounts[0].unit, `${line} / ${merged}`, { context: 'lookahead', density: density || amountLooksDensity(merged) });
+                }
+            }
+        }
+
+        const sentenceRegex = /(vitamin\s*a|vitamin\s*b6|vitamin\s*c|vitamin\s*d|vitamin\s*e|zinc|selenium|magnesium|manganese|glucosamine(?:\s+hydrochloride)?|chondroitin(?:\s+sulfate(?:\s+sodium)?)?|hyaluronic\s+acid|calcium\s+fructoborate|coq\s*10|coenzyme\s*q\s*10|辅酶q\s*10|锌|硒|镁|锰)\b[^\n]{0,80}?(\d+(?:[.,]\d+)?)\s*(mcg|μg|ug|mg|g|iu)\+?/ig;
+        let sm;
+        while ((sm = sentenceRegex.exec(normalized)) !== null) {
+            const label = detectIngredientLabel(sm[1]);
+            if (!label) continue;
+            addIngredientPair(ingredientPairs, seen, label, parseFloat(String(sm[2]).replace(',', '')), sm[3], sm[0], { context: 'sentence', density: amountLooksDensity(sm[0]) });
+        }
+
+        const pairConfidence = ingredientPairs.reduce((sum, item) => {
+            let score = 1;
+            if (item.context === 'same-line') score += 1.2;
+            if (item.context === 'sentence') score += 1.1;
+            if (item.context === 'next-line') score += 0.7;
+            if (item.density) score -= 0.4;
+            return sum + score;
+        }, 0);
+
+        return {
+            lines,
+            ingredientPairs,
+            pairConfidence
+        };
+    }
+
+    function evaluateDosageSafety(pairs) {
+        const positives = [];
+        const issues = [];
+        let safetyDelta = 0;
+        let formulaDelta = 0;
+        let analyzableCount = 0;
+
+        for (const pair of pairs) {
+            const rule = DOSAGE_RULES[pair.ingredient];
+            if (!rule) continue;
+            analyzableCount += 1;
+            const converted = convertAmountToBase(pair.amount, pair.unit);
+            if (!converted) continue;
+
+            if (converted.mg != null) {
+                if (rule.effectiveMinMg != null) {
+                    if (converted.mg >= rule.effectiveMinMg) {
+                        formulaDelta += 5;
+                        positives.push(`${pair.ingredient} 剂量达到常见有效区间`);
+                    } else {
+                        formulaDelta -= 3;
+                        issues.push(`${pair.ingredient} 剂量可能偏低`);
+                    }
+                }
+                if (rule.cautionMg != null && converted.mg >= rule.cautionMg) {
+                    safetyDelta -= 8;
+                    issues.push(`${pair.ingredient} 剂量偏高，建议关注适用人群`);
+                }
+                if (rule.upperMg != null && converted.mg > rule.upperMg) {
+                    safetyDelta -= 18;
+                    issues.push(`${pair.ingredient} 可能超过常见安全上限`);
+                }
+            }
+
+            if (converted.mcg != null) {
+                if (rule.effectiveMinMcg != null) {
+                    if (converted.mcg >= rule.effectiveMinMcg) {
+                        formulaDelta += 5;
+                        positives.push(`${pair.ingredient} 剂量达到常见有效区间`);
+                    } else {
+                        formulaDelta -= 3;
+                        issues.push(`${pair.ingredient} 剂量可能偏低`);
+                    }
+                }
+                if (rule.cautionMcg != null && converted.mcg >= rule.cautionMcg) {
+                    safetyDelta -= 8;
+                    issues.push(`${pair.ingredient} 剂量偏高，建议关注长期使用`);
+                }
+                if (rule.upperMcg != null && converted.mcg > rule.upperMcg) {
+                    safetyDelta -= 18;
+                    issues.push(`${pair.ingredient} 可能超过常见安全上限`);
+                }
+            }
+        }
+
+        return {
+            analyzableCount,
+            formulaDelta,
+            safetyDelta,
+            positives: [...new Set(positives)].slice(0, 4),
+            issues: [...new Set(issues)].slice(0, 5)
+        };
+    }
+
+    function evaluateEvidenceSignals(text, structuredPairs) {
+        const matches = [];
+        const pairLabels = [...new Set((structuredPairs || []).map(item => item.ingredient))];
+        let scoreDelta = 0;
+        let hitCount = 0;
+
+        if (/joint|关节|软骨|骨骼|灵活度|mobility|cartilage|bone health/i.test(text)) {
+            scoreDelta += 3;
+            hitCount += 1;
+            matches.push('功能方向与成分场景一致');
+        }
+        if (/supports?|help(s)? maintain|维持|支持|protect|promote|improve/i.test(text)) {
+            scoreDelta += 2;
+            hitCount += 1;
+            matches.push('存在基础功效表述');
+        }
+        if (/doctor formulated|pharmacist|expert|recommended by|专家|医生|配方师/i.test(text)) {
+            scoreDelta += 2;
+            hitCount += 1;
+            matches.push('有专家/配方背书文案');
+        }
+
+        for (const rule of EVIDENCE_INGREDIENT_RULES) {
+            const matchedCount = rule.ingredients.filter(name => pairLabels.includes(name)).length;
+            if (matchedCount > 0) {
+                const isComboRule = rule.ingredients.length > 1;
+                if (!isComboRule || matchedCount === rule.ingredients.length) {
+                    scoreDelta += rule.score;
+                    hitCount += 1;
+                    matches.push(rule.label);
+                }
+            }
+        }
+
+        if (pairLabels.length >= 3) {
+            scoreDelta += Math.min(6, pairLabels.length * 1.5);
+            hitCount += 1;
+            matches.push('识别到多种可分析成分');
+        }
+
+        return {
+            scoreDelta,
+            hitCount,
+            matches: [...new Set(matches)].slice(0, 5)
+        };
+    }
+
+    function evaluateEvidenceFoundation(structuredPairs) {
+        const matches = [];
+        const issues = [];
+        let baseScore = 48;
+        let scoreDelta = 0;
+        let effectiveCount = 0;
+        let strongDoseCount = 0;
+        let recognizedCount = 0;
+
+        for (const pair of (structuredPairs || [])) {
+            const rule = EVIDENCE_DB[pair.ingredient];
+            if (!rule) continue;
+            recognizedCount += 1;
+            scoreDelta += rule.baseScore;
+            matches.push(`${pair.ingredient}：${rule.evidenceTier}级证据基础`);
+
+            const converted = convertAmountToBase(pair.amount, pair.unit);
+            if (!converted) continue;
+
+            if (converted.mg != null) {
+                if (rule.effectiveMinMg != null && converted.mg >= rule.effectiveMinMg) {
+                    effectiveCount += 1;
+                    scoreDelta += 8;
+                    matches.push(`${pair.ingredient} 剂量达到常见有效区间`);
+                } else if (rule.effectiveMinMg != null) {
+                    scoreDelta -= 5;
+                    issues.push(`${pair.ingredient} 剂量低于常见有效区间`);
+                }
+                if (rule.strongDoseMg != null && converted.mg >= rule.strongDoseMg) {
+                    strongDoseCount += 1;
+                    scoreDelta += 5;
+                    matches.push(`${pair.ingredient} 剂量达到较强研究常见区间`);
+                }
+            }
+
+            if (converted.mcg != null) {
+                if (rule.effectiveMinMcg != null && converted.mcg >= rule.effectiveMinMcg) {
+                    effectiveCount += 1;
+                    scoreDelta += 8;
+                    matches.push(`${pair.ingredient} 剂量达到常见有效区间`);
+                } else if (rule.effectiveMinMcg != null) {
+                    scoreDelta -= 5;
+                    issues.push(`${pair.ingredient} 剂量低于常见有效区间`);
+                }
+                if (rule.strongDoseMcg != null && converted.mcg >= rule.strongDoseMcg) {
+                    strongDoseCount += 1;
+                    scoreDelta += 5;
+                    matches.push(`${pair.ingredient} 剂量达到较强研究常见区间`);
+                }
+            }
+        }
+
+        if (recognizedCount >= 2) {
+            scoreDelta += 6;
+            matches.push('识别到多个可查证成分');
+        }
+        if (effectiveCount >= 2) {
+            scoreDelta += 8;
+            matches.push('多项成分剂量达到有效区间');
+        }
+        if (strongDoseCount >= 1) {
+            scoreDelta += 4;
+            matches.push('至少一项成分达到较强研究剂量');
+        }
+
+        return {
+            baseScore,
+            scoreDelta,
+            recognizedCount,
+            effectiveCount,
+            strongDoseCount,
+            matches: [...new Set(matches)].slice(0, 6),
+            issues: [...new Set(issues)].slice(0, 4)
+        };
+    }
+
+
+    function evaluateCertificationSignals(text, structuredPairs) {
+        const matches = [];
+        let scoreDelta = 0;
+        let hitCount = 0;
+        let strongHits = 0;
+        let mediumHits = 0;
+        const pairCount = Array.isArray(structuredPairs) ? structuredPairs.length : 0;
+
+        for (const rule of CERTIFICATION_SIGNAL_RULES) {
+            if (rule.regex.test(text)) {
+                scoreDelta += rule.score;
+                hitCount += (rule.hits || 1);
+                matches.push(rule.label);
+                if (rule.tier === 'strong') strongHits += 1;
+                if (rule.tier === 'medium') mediumHits += 1;
+            }
+        }
+
+        if (pairCount >= 3) {
+            scoreDelta += 5;
+            hitCount += 1;
+            matches.push('配方结构完整，非低质产品');
+        }
+        if (pairCount >= 5) {
+            scoreDelta += 3;
+            matches.push('识别到多组可核对成分');
+        }
+
+        let fallbackScore = 30;
+        if (mediumHits >= 1) fallbackScore += 6;
+        if (mediumHits >= 2) fallbackScore += 4;
+        if (pairCount >= 3) fallbackScore += 4;
+        if (pairCount >= 5) fallbackScore += 2;
+        fallbackScore = Math.min(48, fallbackScore);
+
+        return {
+            scoreDelta,
+            hitCount,
+            matches: [...new Set(matches)].slice(0, 5),
+            strongHits,
+            mediumHits,
+            fallbackScore
+        };
+    }
+
+    function scoreExtractedText(rawText) {
+        const t = normalizeOcrText(rawText);
+        const compact = normalizeSpaces(t);
+        const letters = (compact.match(/[a-zA-Z0-9一-龥]/g) || []).length;
+        const keywords = (compact.match(/vitamin|mineral|gmp|fda|usp|nsf|ingredient|nutrition|supplement|dosage|clinical|research|成分|营养|认证|保健|剂量|serving|facts|标志性成分|active ingredients/ig) || []).length;
+        const structure = parseStructuredNutrition(t);
+        const pairCount = structure.ingredientPairs.length;
+        const highQualityPairs = structure.ingredientPairs.filter(p => !p.density && (p.context === 'same-line' || p.context === 'sentence')).length;
+        const evidenceKeywords = (compact.match(/meta|rct|clinical|trial|研究|临床|随机|文献|published/ig) || []).length;
+        const tableKeywords = (compact.match(/supplement facts|amount per serving|serving size|active ingredients|标志性成分|每100g|适宜人群|不适宜人群/ig) || []).length;
+        return letters + keywords * 8 + pairCount * 32 + highQualityPairs * 26 + Math.round((structure.pairConfidence || 0) * 10) + evidenceKeywords * 10 + tableKeywords * 15;
+    }
+
+    async function loadImageBitmapSafe(file) {
+        if (typeof createImageBitmap === 'function') {
+            try { return await createImageBitmap(file); } catch (e) {}
+        }
+        return await new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片读取失败')); };
+            img.src = url;
+        });
+    }
+
+    function cropCanvasRegion(sourceCanvas, sx, sy, sw, sh) {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(sw));
+        canvas.height = Math.max(1, Math.round(sh));
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(sourceCanvas, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+        return canvas;
+    }
+
+    function toGrayHighContrast(canvas, invert = false) {
+        const out = document.createElement('canvas');
+        out.width = canvas.width;
+        out.height = canvas.height;
+        const ctx = out.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(canvas, 0, 0);
+        const imgData = ctx.getImageData(0, 0, out.width, out.height);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            let gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+            gray = (gray - 128) * 1.35 + 128;
+            gray = Math.max(0, Math.min(255, gray));
+            if (invert) gray = 255 - gray;
+            data[i] = gray;
+            data[i + 1] = gray;
+            data[i + 2] = gray;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        return out;
+    }
+
+    function toBinaryTextBoost(canvas, invert = false) {
+        const out = document.createElement('canvas');
+        out.width = canvas.width;
+        out.height = canvas.height;
+        const ctx = out.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(canvas, 0, 0);
+        const imgData = ctx.getImageData(0, 0, out.width, out.height);
+        const data = imgData.data;
+
+        let sum = 0;
+        let count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+            sum += gray;
+            count += 1;
+        }
+        const avg = count ? (sum / count) : 160;
+        const threshold = Math.max(105, Math.min(190, avg - 18));
+
+        for (let i = 0; i < data.length; i += 4) {
+            let gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+            // 对浅蓝底黑字更激进地拉开对比
+            gray = (gray - threshold) * 2.1 + 128;
+            gray = gray > 128 ? 255 : 0;
+            if (invert) gray = 255 - gray;
+            data[i] = gray;
+            data[i + 1] = gray;
+            data[i + 2] = gray;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        return out;
+    }
+
+    async function canvasToBlob(canvas) {
+        return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png', 0.92));
+    }
+
+    async function buildOcrInputs(file) {
+        const source = await loadImageBitmapSafe(file);
+        const maxSide = 2400;
+        const scale = Math.min(1, maxSide / Math.max(source.width, source.height));
+        const baseCanvas = document.createElement('canvas');
+        baseCanvas.width = Math.max(1, Math.round(source.width * scale));
+        baseCanvas.height = Math.max(1, Math.round(source.height * scale));
+        const ctx = baseCanvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(source, 0, 0, baseCanvas.width, baseCanvas.height);
+
+        const inputs = [];
+        const fullGray = toGrayHighContrast(baseCanvas, false);
+        const fullInvert = toGrayHighContrast(baseCanvas, true);
+
+        const topCanvas = cropCanvasRegion(baseCanvas, 0, 0, baseCanvas.width, baseCanvas.height * 0.30);
+        const centerCanvas = cropCanvasRegion(baseCanvas, baseCanvas.width * 0.10, baseCanvas.height * 0.16, baseCanvas.width * 0.80, baseCanvas.height * 0.56);
+        const centerGray = toGrayHighContrast(centerCanvas, false);
+        const centerInvert = toGrayHighContrast(centerCanvas, true);
+        const factsCanvas = cropCanvasRegion(baseCanvas, baseCanvas.width * 0.16, baseCanvas.height * 0.18, baseCanvas.width * 0.68, baseCanvas.height * 0.54);
+        const factsGray = toGrayHighContrast(factsCanvas, false);
+        const factsInvert = toGrayHighContrast(factsCanvas, true);
+        const rightColumnCanvas = cropCanvasRegion(baseCanvas, baseCanvas.width * 0.48, baseCanvas.height * 0.10, baseCanvas.width * 0.42, baseCanvas.height * 0.72);
+        const rightColumnGray = toGrayHighContrast(rightColumnCanvas, false);
+        const bottomCanvas = cropCanvasRegion(baseCanvas, 0, baseCanvas.height * 0.54, baseCanvas.width, baseCanvas.height * 0.46);
+        const bottomGray = toGrayHighContrast(bottomCanvas, false);
+        const bottomInvert = toGrayHighContrast(bottomCanvas, true);
+        const labelPanelCanvas = cropCanvasRegion(baseCanvas, baseCanvas.width * 0.14, baseCanvas.height * 0.16, baseCanvas.width * 0.72, baseCanvas.height * 0.74);
+        const labelPanelGray = toGrayHighContrast(labelPanelCanvas, false);
+        const labelPanelBinary = toBinaryTextBoost(labelPanelCanvas, false);
+        const labelPanelBinaryInvert = toBinaryTextBoost(labelPanelCanvas, true);
+
+        const assets = [
+            { canvas: factsGray, label: '表格/成分中心区（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: factsInvert, label: '表格反相增强（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: centerGray, label: '中心区域增强（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: centerInvert, label: '中心区域反相（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: rightColumnGray, label: '右侧成分栏（英文）', lang: 'eng', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: bottomGray, label: '下部中文说明（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: bottomInvert, label: '下部反相增强（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: labelPanelGray, label: '中文标签主区域（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: labelPanelBinary, label: '中文标签二值增强（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: labelPanelBinaryInvert, label: '中文标签二值反相（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: topCanvas, label: '上部用法说明（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 6 } },
+            { canvas: fullGray, label: '增强整图（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 3 } },
+            { canvas: fullInvert, label: '反相增强图（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 3 } },
+            { canvas: centerCanvas, label: '中心区域（英文）', lang: 'eng', config: { tessedit_pageseg_mode: 6 } }
+        ];
+
+        for (const item of assets) {
+            const blob = await canvasToBlob(item.canvas);
+            if (blob) inputs.push({ input: blob, label: item.label, lang: item.lang, config: item.config || {} });
+        }
+        inputs.push({ input: file, label: '原图（中英）', lang: 'eng+chi_sim', config: { tessedit_pageseg_mode: 3 } });
+        return inputs;
+    }
+
+    async function recognizeWithFallbacks(file, statusDiv) {
+        const attempts = await buildOcrInputs(file).catch(() => [{ input: file, label: '原图（中英）', lang: 'eng+chi_sim' }]);
+        let best = { text: '', score: -1, label: '' };
+        let lastError = null;
+
+        for (let i = 0; i < attempts.length; i++) {
+            const attempt = attempts[i];
+            statusDiv.innerHTML = `<span class="loading-spinner"></span> AI 正在识别产品标签内容...（${attempt.label}）`;
+            try {
+                const { data: { text } } = await Tesseract.recognize(attempt.input, attempt.lang, {
+                    logger: m => { if (m.status === 'recognizing text') console.log(m); },
+                    ...(attempt.config || {})
+                });
+                const currentText = text || '';
+                const currentScore = scoreExtractedText(currentText);
+                if (currentScore > best.score) best = { text: currentText, score: currentScore, label: attempt.label };
+                if (currentScore >= 220) break;
+            } catch (err) {
+                lastError = err;
+            }
+        }
+
+        if (!best.text && lastError) throw lastError;
+        return best;
+    }
+
+    function buildPairSummary(data) {
+        const pairs = Array.isArray(data?.ingredientPairs)
+            ? data.ingredientPairs
+            : (Array.isArray(data?.structuredPairs) ? data.structuredPairs : []);
+        if (!pairs.length) return '';
+        const text = pairs
+            .slice(0, 8)
+            .map(item => `${item.ingredient}: ${item.amount} ${item.unit}`)
+            .join(' | ');
+        return `<div class="match-tag positive-tag" style="margin-top:10px;"><i class="fas fa-link"></i> 结构化识别：${escapeHtml(text)}</div>`;
+    }
+
+    function analyzeBasedOnRealText(ocrText) {
+        const normalizedText = normalizeOcrText(ocrText);
+        const text = String(normalizedText || '').toLowerCase();
+        const cleanedText = normalizeSpaces(text);
+        const hasChinese = /[一-龥]/.test(text);
+        const hasEnglish = /[a-zA-Z]{3,}/.test(text);
+        const langHint = hasChinese && hasEnglish ? "中英混合" : (hasChinese ? "中文为主" : (hasEnglish ? "英文为主" : "识别内容较少"));
+        const recognizedLength = cleanedText.length;
+        const structured = parseStructuredNutrition(ocrText);
+        const dosageReview = evaluateDosageSafety(structured.ingredientPairs);
+        const evidenceReview = evaluateEvidenceSignals(text, structured.ingredientPairs);
+
+        const strongStructure = structured.ingredientPairs.filter(p => !p.density).length;
+        const densityStructure = structured.ingredientPairs.filter(p => p.density).length;
+        const hasNutritionPanel = /supplement facts|amount per serving|serving size|active ingredients|标志性成分|成分及含量|每100g|适宜人群|不适宜人群|食用量及食用方法|备案号|执行标准|保健功能|规格|辅酶q|coq10/i.test(text);
+
+        if (recognizedLength < 18 && strongStructure === 0 && densityStructure === 0 && !hasNutritionPanel) {
+            return {
+                total: 'N/A',
+                grade: '资料不足',
+                summary: '当前识别到的有效文字过少，无法进行可靠评分。建议上传更清晰、正向拍摄、包含成分表／剂量／认证信息的产品标签图片。',
+                langHint,
+                insufficient: true,
+                structuredPairs: structured.ingredientPairs,
+                dimensions: [
+                    { name: DIMENSIONS_META[0].name, score: 0, description: '需识别到临床研究、文献或指南信息后才能评分', matches: [] },
+                    { name: DIMENSIONS_META[1].name, score: 0, description: '需识别到成分、剂量或配方信息后才能评分', matches: [] },
+                    { name: DIMENSIONS_META[2].name, score: 0, description: '需识别到认证、备案或销售渠道信息后才能评分', matches: [] },
+                    { name: DIMENSIONS_META[3].name, score: 0, description: '需识别到警示、过敏原或安全标签后才能评分', issues: [], positives: [] }
+                ],
+                textLength: ocrText.length
+            };
+        }
+
+        let evidenceHits = 0;
+        let formulaHits = 0;
+        let certHits = 0;
+        let evidenceMatches = [];
+        let formulaMatches = [];
+        let certMatches = [];
+        let safetyIssues = [];
+        let safetyPositives = [];
+        const certReview = evaluateCertificationSignals(text, structured.ingredientPairs);
+        const evidenceFoundation = evaluateEvidenceFoundation(structured.ingredientPairs);
+
+        let evidenceScore = evidenceFoundation.baseScore;
+        let formulaScore = 36;
+        let certScore = 32;
+        let safetyScore = 62;
+
+        if (text.match(/meta.?分析|荟萃分析|meta-analysis|systematic review|系统评价/i)) {
+            evidenceScore += 8;
+            evidenceHits += 2;
+            evidenceMatches.push('标签出现 Meta/系统评价表述');
+        }
+        if (text.match(/rct|随机对照|randomized controlled trial|随机双盲|double-blind|randomized/i)) {
+            evidenceScore += 7;
+            evidenceHits += 2;
+            evidenceMatches.push('标签出现 RCT/随机对照表述');
+        }
+        if (text.match(/临床研究|clinical trial|临床试验|人体研究|human study|clinical study/i)) {
+            evidenceScore += 6;
+            evidenceHits += 1;
+            evidenceMatches.push('标签出现人体临床表述');
+        }
+        if (text.match(/指南推荐|专家共识|guideline|clinical guideline|权威推荐|consensus/i)) {
+            evidenceScore += 5;
+            evidenceHits += 1;
+            evidenceMatches.push('标签出现指南/共识表述');
+        }
+        if (text.match(/sci|核心期刊|发表|published|journal|文献|literature|peer-reviewed/i)) {
+            evidenceScore += 3;
+            evidenceHits += 1;
+            evidenceMatches.push('标签出现学术发表表述');
+        }
+        if (text.match(/动物实验|animal study|动物研究|in vivo|in vitro|体外研究/i)) {
+            evidenceScore += 2;
+            evidenceHits += 1;
+            evidenceMatches.push('标签出现基础研究表述');
+        }
+
+        evidenceScore += evidenceFoundation.scoreDelta;
+        evidenceScore += evidenceReview.scoreDelta;
+        evidenceHits += evidenceReview.hitCount + evidenceFoundation.recognizedCount;
+        evidenceMatches.push(...evidenceFoundation.matches, ...evidenceReview.matches);
+        if (evidenceFoundation.issues.length) {
+            evidenceMatches.push(...evidenceFoundation.issues.map(item => `保守扣分：${item}`));
+        }
+
+        if (evidenceFoundation.recognizedCount === 0 && evidenceHits === 0) {
+            evidenceScore = 42 + Math.min(12, structured.ingredientPairs.length * 3);
+            if (structured.ingredientPairs.length > 0) evidenceMatches.push('依据识别到的成分数量做保守估分');
+        }
+        if (evidenceFoundation.recognizedCount >= 1 && evidenceFoundation.effectiveCount === 0) {
+            evidenceScore = Math.min(evidenceScore, 68);
+        }
+        evidenceScore = Math.min(100, Math.max(22, Math.round(evidenceScore)));
+        evidenceMatches = [...new Set(evidenceMatches)].slice(0, 6);
+        if (strongStructure >= 2 || structured.ingredientPairs.length >= 2) {
+            formulaScore += 10;
+            formulaHits += 1;
+            formulaMatches.push(`识别到 ${structured.ingredientPairs.length} 组“成分-剂量”配对`);
+        }
+        if (strongStructure >= 4 || structured.ingredientPairs.length >= 4) {
+            formulaScore += 6;
+            formulaMatches.push('配方结构较完整');
+        }
+        if (text.match(/每份|每粒|每袋|每片|每勺|serving size|per serving|per capsule|per tablet|amount per serving|dosage/i)) { formulaScore += 10; formulaHits += 1; formulaMatches.push('有明确剂量/用量'); }
+        if (text.match(/益生菌|probiotic|膳食纤维|fiber|维生素|vitamin|矿物质|mineral|氨基酸|amino acid|辅酶|coq10|omega|dha|epa|蛋白|protein|肽|peptide|胶原蛋白|collagen/i)) { formulaScore += 10; formulaHits += 1; formulaMatches.push('明确功能成分'); }
+        if (text.match(/专利|patent|标准提取物|standardized extract|高纯度|high purity|临床剂量|clinical dose|bioavailable/i)) { formulaScore += 12; formulaHits += 1; formulaMatches.push('标准化/特色工艺'); }
+        if (text.match(/天然|natural|有机|organic|草本|herbal|植物提取|plant extract|whole food|非转基因|non-gmo/i)) { formulaScore += 4; formulaHits += 1; formulaMatches.push('天然来源成分'); }
+        formulaScore += dosageReview.formulaDelta;
+        if (dosageReview.analyzableCount > 0) {
+            formulaMatches.push(`已解析 ${dosageReview.analyzableCount} 个可判断剂量的成分`);
+        }
+        if (structured.ingredientPairs.some(p => p.density)) {
+            formulaMatches.push('含每100g/密度型标示，已做保守解析');
+        }
+        if (formulaHits === 0 && strongStructure === 0 && structured.ingredientPairs.length === 0) formulaScore = 32;
+        formulaScore = Math.min(100, Math.max(12, formulaScore));
+
+        certScore += certReview.scoreDelta;
+        certHits += certReview.hitCount;
+        certMatches.push(...certReview.matches);
+        if (certReview.strongHits === 0) {
+            certScore = Math.max(certScore, certReview.fallbackScore);
+            if (certReview.mediumHits > 0) {
+                certMatches.push('依据来源/渠道/标签完整度做保守估分');
+            }
+        }
+        certScore = Math.min(100, Math.max(18, certScore));
+        certMatches = [...new Set(certMatches)].slice(0, 5);
+
+        if (text.match(/违规|召回|违法|处罚|violation|recall|黑名单|不合格|banned|withdrawn|诉讼|lawsuit/i)) { safetyScore -= 22; safetyIssues.push('监管违规/召回记录'); }
+        if (text.match(/副作用|不良反应|side effect|adverse reaction|恶心|nausea|腹泻|diarrhea|头痛|headache|过敏反应|allergic reaction/i)) { safetyScore -= 6; safetyIssues.push('提及潜在不良反应'); }
+        if (text.match(/过敏原|contains|allergen|allergy|禁忌|contraindication|乳糖|lactose|麸质|gluten|shellfish|soy|milk/i)) { safetyScore -= 1; safetyIssues.push('含过敏原/特殊人群提示'); }
+        if (text.match(/孕妇慎用|儿童禁用|哺乳期禁用|pregnancy|breastfeeding|children|elderly caution|not recommended for/i)) { safetyScore -= 1.5; safetyIssues.push('特殊人群限制'); }
+        if (text.match(/safety tested|clinically safe|non-toxic|严格测试|安全测试|安全认证/i)) { safetyScore += 8; safetyPositives.push('安全测试认证'); }
+        if (text.match(/无添加|0添加|无防腐剂|无人工色素|gluten-free|no preservatives|no artificial|sugar-free/i)) { safetyScore += 5; safetyPositives.push('无不良添加/纯净配方'); }
+        if (text.match(/建议用量|recommended dosage|do not exceed|按推荐量服用|recommended use/i)) { safetyScore += 4; safetyPositives.push('有明确安全用量提示'); }
+
+        safetyScore += dosageReview.safetyDelta;
+        safetyIssues = [...new Set([...safetyIssues, ...dosageReview.issues])].slice(0, 5);
+        safetyPositives = [...new Set([...safetyPositives, ...dosageReview.positives])].slice(0, 5);
+
+        if (dosageReview.analyzableCount === 0) {
+            safetyScore = Math.max(safetyScore, 58);
+            if (!/recommended dosage|do not exceed|过敏原|allergen|contains|warning|caution/i.test(text)) {
+                safetyPositives.push('资料有限，安全性按中性保守估分');
+            }
+        }
+        safetyScore = Math.min(100, Math.max(35, safetyScore));
+
+        let infoCompletenessBonus = 0;
+        if (recognizedLength >= 70) infoCompletenessBonus += 3;
+        if (recognizedLength >= 140) infoCompletenessBonus += 4;
+        if (recognizedLength >= 240) infoCompletenessBonus += 3;
+        if (strongStructure >= 3 || structured.ingredientPairs.length >= 3) infoCompletenessBonus += 3;
+
+        let totalScore = (evidenceScore * 0.30) + (formulaScore * 0.25) + (certScore * 0.22) + (safetyScore * 0.23) + infoCompletenessBonus;
+        totalScore = Math.min(99, Math.max(8, Math.round(totalScore * 10) / 10));
+
+        let grade = '';
+        if (totalScore >= 84) grade = 'A+ 卓越品质';
+        else if (totalScore >= 74) grade = 'A 优秀推荐';
+        else if (totalScore >= 64) grade = 'B+ 良好';
+        else if (totalScore >= 54) grade = 'B 合格';
+        else if (totalScore >= 42) grade = 'C 有待改进';
+        else grade = 'D 谨慎选择';
+
+        let positiveHighlights = [];
+        if (evidenceMatches.length) positiveHighlights.push(`🔬 科学证据：${evidenceMatches.slice(0,2).join('、')}`);
+        if (formulaMatches.length) positiveHighlights.push(`🌿 配方亮点：${formulaMatches.slice(0,2).join('、')}`);
+        if (certMatches.length) positiveHighlights.push(`🏅 认证合规：${certMatches.slice(0,2).join('、')}`);
+        if (safetyPositives.length) positiveHighlights.push(`🛡️ 安全性加分：${safetyPositives.slice(0,2).join('、')}`);
+
+        let riskNotes = [];
+        if (safetyIssues.length) riskNotes.push(`⚠️ 关注点：${safetyIssues.slice(0,2).join('、')}`);
+        if (evidenceFoundation.recognizedCount === 0) riskNotes.push('⚠️ 未识别到可查证的核心成分证据库');
+        else if (evidenceFoundation.effectiveCount === 0) riskNotes.push('⚠️ 识别到成分，但剂量未达到常见有效区间');
+        if (certReview.strongHits === 0) riskNotes.push('⚠️ 未识别到强认证或备案信息');
+
+        let summaryText = `综合评分 ${totalScore} 分 (${grade})。`;
+        if (positiveHighlights.length > 0) summaryText += ` 产品优势：${positiveHighlights.join('；')}。`;
+        else summaryText += ' 当前可识别的强证据较少，评分偏保守。';
+        if (riskNotes.length > 0) summaryText += ` ${riskNotes.slice(0,3).join('；')}。`;
+
+        return {
+            total: totalScore,
+            grade,
+            summary: summaryText,
+            langHint,
+            insufficient: false,
+            structuredPairs: structured.ingredientPairs,
+            dimensions: [
+                { name: DIMENSIONS_META[0].name, score: evidenceScore, description: DIMENSIONS_META[0].description, matches: evidenceMatches },
+                { name: DIMENSIONS_META[1].name, score: formulaScore, description: DIMENSIONS_META[1].description, matches: formulaMatches },
+                { name: DIMENSIONS_META[2].name, score: certScore, description: DIMENSIONS_META[2].description, matches: certMatches },
+                { name: DIMENSIONS_META[3].name, score: safetyScore, description: DIMENSIONS_META[3].description, issues: safetyIssues, positives: safetyPositives }
+            ],
+            textLength: ocrText.length
+        };
+    }
+
+    function displayResult(analysis) {
+        const resultSection = document.getElementById('resultSection');
+        resultSection.classList.remove('hidden');
+        const circle = document.querySelector('.circle-progress');
+        const radius = 96;
+        const circumference = 2 * Math.PI * radius;
+        let numericTotal = analysis.insufficient ? 0 : Number(analysis.total || 0);
+        let percent = Math.min(1, Math.max(0, numericTotal / 100));
+        let dash = percent * circumference;
+        circle.style.strokeDasharray = `${dash} ${circumference}`;
+        document.getElementById('scoreNumber').textContent = analysis.insufficient ? '--' : String(analysis.total);
+        document.getElementById('gradeLetter').innerHTML = analysis.grade;
+        document.getElementById('aiSummaryText').innerHTML = `<i class="fas fa-quote-left" style="opacity:0.6; margin-right:8px;"></i> ${analysis.summary}`;
+
+        const confNote = document.getElementById('confidenceNote');
+        if (analysis.insufficient) {
+            confNote.innerHTML = '<i class="fas fa-info-circle"></i> 资料不足，本次不做正式评级。建议补充清晰的成分表、剂量说明或认证标签图片。';
+        } else if (analysis.textLength < 80) {
+            confNote.innerHTML = '<i class="fas fa-info-circle"></i> 识别文字较少，系统已启用结构化配对与较保守评分；建议上传更清晰完整的产品标签。';
+        } else {
+            confNote.innerHTML = `<i class="fas fa-check-circle"></i> 基于${analysis.langHint}内容分析，已加入“证据库 + 成分-剂量配对 + 剂量判读”逻辑。`;
+        }
+
+        const container = document.getElementById('dimensionsContainer');
+        container.innerHTML = '';
+        analysis.dimensions.forEach(dim => {
+            const card = document.createElement('div');
+            card.className = 'dim-card';
+            let extraHtml = '';
+            if (dim.matches && dim.matches.length > 0) {
+                extraHtml = `<div class="match-tag"><i class="fas fa-flask"></i> ${escapeHtml(dim.matches.slice(0,2).join(', '))}</div>`;
+            }
+            if (dim.issues && dim.issues.length > 0) {
+                extraHtml = `<div class="match-tag warning-tag"><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(dim.issues.slice(0,2).join(', '))}</div>`;
+            }
+            if (dim.positives && dim.positives.length > 0 && (!dim.issues || dim.issues.length === 0)) {
+                extraHtml = `<div class="match-tag positive-tag"><i class="fas fa-leaf"></i> ${escapeHtml(dim.positives.slice(0,2).join(', '))}</div>`;
+            }
+            card.innerHTML = `
+                <div class="dim-title">
+                    <span>${dim.name}</span>
+                    <span style="font-weight:800;">${dim.score}分</span>
+                </div>
+                <div class="dim-bar">
+                    <div class="dim-fill" style="width: ${dim.score}%;"></div>
+                </div>
+                <div class="dim-score">${dim.description}</div>
+                ${extraHtml}
+            `;
+            container.appendChild(card);
+        });
+
+        if (analysis.structuredPairs && analysis.structuredPairs.length) {
+            const extra = document.createElement('div');
+            extra.className = 'dim-card';
+            extra.innerHTML = `
+                <div class="dim-title">
+                    <span>🔗 结构化识别结果</span>
+                    <span style="font-weight:800;">${analysis.structuredPairs.length}组</span>
+                </div>
+                <div class="dim-score">已自动将成分与剂量配对，优先用于配方与安全性判断。</div>
+                ${buildPairSummary(analysis)}
+            `;
+            container.appendChild(extra);
+        }
+
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function processImage(file) {
+        const statusDiv = document.getElementById('ocrStatus');
+        const previewArea = document.getElementById('previewArea');
+        const previewText = document.getElementById('previewText');
+        const langHintDiv = document.getElementById('detectedLangHint');
+
+        statusDiv.innerHTML = '<span class="loading-spinner"></span> AI 正在识别产品标签内容...';
+        previewArea.classList.remove('show');
+        langHintDiv.innerHTML = '';
+        document.getElementById('resultSection').classList.add('hidden');
+
+        try {
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            if (['heic', 'heif'].includes(ext)) {
+                throw new Error('HEIC/HEIF 图片在部分浏览器中不易直接识别，建议先转成 JPG 或 PNG 再上传。');
+            }
+
+            const ocrResult = await recognizeWithFallbacks(file, statusDiv);
+            const extractedText = ocrResult.text || "";
+            const structured = parseStructuredNutrition(extractedText);
+
+            let displayText = escapeHtml(extractedText.substring(0, 900));
+            if (structured.ingredientPairs.length) {
+                const pairText = structured.ingredientPairs.slice(0, 8).map(p => `${p.ingredient}: ${p.amount} ${p.unit}`).join(' | ');
+                displayText += `<br><br><strong>🔗 结构化配对：</strong><br>${escapeHtml(pairText)}`;
+            }
+            previewText.innerHTML = `<strong>📄 识别内容 (营养成分/认证信息)：</strong><br>${displayText}${extractedText.length > 900 ? '...' : ''}`;
+
+            const hasChinese = /[一-龥]/.test(extractedText);
+            const hasEnglish = /[a-zA-Z]{3,}/.test(extractedText);
+            if (hasChinese && hasEnglish) langHintDiv.innerHTML = `<i class="fas fa-language"></i> 检测到中英文混合内容，已进行结构化分析（${ocrResult.label}）`;
+            else if (hasEnglish) langHintDiv.innerHTML = `<i class="fas fa-language"></i> 检测到英文内容，已进行英文关键词与剂量配对（${ocrResult.label}）`;
+            else if (hasChinese) langHintDiv.innerHTML = `<i class="fas fa-language"></i> 检测到中文内容（${ocrResult.label}）`;
+            else langHintDiv.innerHTML = `<i class="fas fa-info-circle"></i> 识别文字较少，建议确保图片清晰、正拍且文字占比更高（${ocrResult.label}）`;
+
+            previewArea.classList.add('show');
+            statusDiv.innerHTML = '✅ 文字提取完成，营养评分引擎分析中...';
+
+            const analysis = analyzeBasedOnRealText(extractedText);
+            analysis.langHint = hasChinese && hasEnglish ? "中英混合" : (hasEnglish ? "英文为主" : (hasChinese ? "中文为主" : "有限文字"));
+            displayResult(analysis);
+            statusDiv.innerHTML = '✨ 分析完成 | 已启用区域 OCR + 结构化配对 + 剂量判读';
+
+        } catch (err) {
+            console.error(err);
+            resetInterface();
+            statusDiv.innerHTML = `❌ 识别失败：${escapeHtml(err.message || '请确保图片清晰且包含文字信息。')}`;
+            previewText.innerHTML = '识别失败，建议上传清晰的产品标签、包装或营养成分表图片；若为 HEIC，请先转成 JPG/PNG。';
+            previewArea.classList.add('show');
+        }
+    }
+
+    function resetInterface() {
+        document.getElementById('resultSection').classList.add('hidden');
+        document.getElementById('previewArea').classList.remove('show');
+        document.getElementById('ocrStatus').innerHTML = '';
+        document.getElementById('detectedLangHint').innerHTML = '';
+        document.getElementById('imageUpload').value = '';
+        const circle = document.querySelector('.circle-progress');
+        circle.style.strokeDasharray = `0 603`;
+        document.getElementById('scoreNumber').textContent = '0';
+        document.getElementById('gradeLetter').innerHTML = '等待分析';
+        document.getElementById('aiSummaryText').innerHTML = '上传产品图片后，AI将提取文字信息并进行客观评分。';
+        document.getElementById('dimensionsContainer').innerHTML = '';
+        document.getElementById('confidenceNote').innerHTML = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('imageUpload');
+    const triggerBtn = document.getElementById('triggerUploadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    triggerBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+    uploadZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => { if (e.target.files[0]) processImage(e.target.files[0]); });
+    resetBtn.addEventListener('click', resetInterface);
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.style.borderColor = '#6A9FB5'; uploadZone.style.background = '#F5FAFD'; });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = '#B8D4E2'; uploadZone.style.background = '#FCFEFF'; });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.style.borderColor = '#B8D4E2';
+        uploadZone.style.background = '#FCFEFF';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) processImage(file);
+    });
+</script>
+
+</body>
+</html>
