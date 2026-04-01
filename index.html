@@ -238,12 +238,28 @@ body {
     cursor: pointer;
 }
 
-.upload-btn i {
-    display: flex;
+.upload-btn {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-}
+    gap: 10px;
 
+    background: linear-gradient(135deg, #9FB3C1, #6F8796);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+
+    box-shadow:
+        0 6px 18px rgba(90,110,130,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+
+    cursor: pointer;
+}
+        
 .upload-btn:hover {
     transform: translateY(-2px);
     box-shadow: 
