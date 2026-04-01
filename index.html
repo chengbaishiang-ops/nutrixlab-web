@@ -222,18 +222,25 @@ body {
 }
 
 .upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+
+    gap: 10px; 
+
     background: linear-gradient(135deg, #9FB3C1, #6F8796);
     color: white;
     border: none;
-    padding: 12px 26px;
+    padding: 14px 28px;
     border-radius: 40px;
     font-weight: 600;
+    font-size: 1rem;
 
     box-shadow: 
         0 6px 18px rgba(90,110,130,0.25),
         inset 0 1px 0 rgba(255,255,255,0.6);
 
-    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .upload-btn:hover {
