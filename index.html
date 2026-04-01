@@ -248,44 +248,46 @@ body {
     border-radius: 50px;
     border: none;
 
-    /* ⭐ 核心：銀色金屬漸層 */
+    /* ⭐ 高級桃紅金屬感 */
     background: linear-gradient(
         135deg,
-        #F8FAFC 0%,
-        #E5E9EF 25%,
-        #C9D1DA 50%,
-        #E5E9EF 75%,
-        #F8FAFC 100%
+        #FF7AA2,
+        #FF4D7E,
+        #E63A6F
     );
 
-    color: #5A6B7B;
+    color: #ffffff !important; /* ⭐ 強制白字 */
     font-weight: 600;
     font-size: 1rem;
     letter-spacing: 0.5px;
 
-    /* ⭐ 金屬光澤 */
     box-shadow:
-        0 6px 20px rgba(120,130,140,0.25),
-        inset 0 2px 4px rgba(255,255,255,0.9),
-        inset 0 -2px 4px rgba(160,170,180,0.25);
-
-    backdrop-filter: blur(6px);
+        0 8px 24px rgba(230, 60, 110, 0.35),
+        inset 0 2px 4px rgba(255,255,255,0.4),
+        inset 0 -2px 4px rgba(180,30,70,0.25);
 
     cursor: pointer;
     transition: all 0.25s ease;
 }
+
+ .upload-btn i {
+    color: rgba(255,255,255,0.9);
+}      
         
  .upload-btn:hover {
     transform: translateY(-2px);
 
     background: linear-gradient(
         135deg,
-        #FFFFFF,
-        #E9EDF2,
-        #D3DAE3,
-        #E9EDF2,
-        #FFFFFF
+        #FF8FB0,
+        #FF5C8A,
+        #EC3F76
     );
+
+    box-shadow:
+        0 12px 32px rgba(230, 60, 110, 0.45),
+        inset 0 2px 6px rgba(255,255,255,0.6);
+}
 
     box-shadow:
         0 10px 28px rgba(120,130,140,0.35),
