@@ -108,14 +108,20 @@ body {
 }
 
 .logo-img {
-    width: 160px;
-    max-width: 60%;
+    width: 180px;
+    max-width: 64%;
     height: auto;
     display: block;
-    margin: 0 auto 0.5rem;
-    filter: none;
-}
+    margin: 0 auto 0.7rem;
 
+    /* 高級銀藍發光（精修版） */
+    filter:
+        brightness(1.08)
+        contrast(1.06)
+        drop-shadow(0 0 8px rgba(200, 225, 240, 0.45))
+        drop-shadow(0 0 18px rgba(120, 180, 210, 0.28));
+}
+        
 .tagline {
     color: var(--text-main);
     font-size: 0.96rem;
