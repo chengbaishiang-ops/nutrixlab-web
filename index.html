@@ -65,14 +65,37 @@
         .match-tag { font-size: 0.65rem; background: #E1F0F5; padding: 0.2rem 0.5rem; border-radius: 20px; display: inline-block; margin-top: 6px; color: #2C6280; }
         .warning-tag { background: #FFE9E0; color: #C95A2E; }
         .positive-tag { background: #E0F2E9; color: #2E7D5E; }
-        .detected-lang { font-size: 0.7rem; color: #6A9FB5; margin-top: 0.5rem; }
+        .detected-lang { 
+    font-size: 0.7rem; 
+    color: #6A9FB5; 
+    margin-top: 0.5rem; 
+}
+
+.logo-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.logo-img {
+    width: 260px;
+    max-width: 80%;
+    height: auto;
+    display: block;
+    filter:
+        brightness(1.1)
+        contrast(1.1)
+        drop-shadow(0 0 12px rgba(92,200,255,0.35));
+}
     </style>
 </head>
 <body>
 <div class="container">
     <div class="logo-section">
         <!-- 主视觉标语已清除原先 "双语智能营养评分引擎" 字样，只保留品牌名 -->
-        <div class="logo">NutriXLab</div>
+        <div class="logo-wrap">
+    <img src="nutrixlab-logo-cropped.png" alt="NutriXLab Logo" class="logo-img">
+</div>
         <div class="tagline">智能OCR提取 · 循证营养评分引擎 | 支持成分/剂量/证据综合分析</div>
     </div>
     <div class="main-card">
