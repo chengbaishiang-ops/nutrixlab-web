@@ -242,31 +242,60 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 
-    background: linear-gradient(135deg, #9FB3C1, #6F8796);
-    color: white;
+    padding: 14px 30px;
+    border-radius: 50px;
     border: none;
-    padding: 14px 28px;
-    border-radius: 40px;
+
+    /* ⭐ 核心：銀色金屬漸層 */
+    background: linear-gradient(
+        135deg,
+        #F8FAFC 0%,
+        #E5E9EF 25%,
+        #C9D1DA 50%,
+        #E5E9EF 75%,
+        #F8FAFC 100%
+    );
+
+    color: #5A6B7B;
     font-weight: 600;
     font-size: 1rem;
     letter-spacing: 0.5px;
 
+    /* ⭐ 金屬光澤 */
     box-shadow:
-        0 6px 18px rgba(90,110,130,0.25),
-        inset 0 1px 0 rgba(255,255,255,0.6);
+        0 6px 20px rgba(120,130,140,0.25),
+        inset 0 2px 4px rgba(255,255,255,0.9),
+        inset 0 -2px 4px rgba(160,170,180,0.25);
+
+    backdrop-filter: blur(6px);
 
     cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.upload-btn i {
+    color: #8FA1B2;
+    font-size: 1.2rem;
 }
         
 .upload-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 
-        0 10px 24px rgba(90,110,130,0.28),
-        inset 0 1px 0 rgba(255,255,255,0.7);
-}
 
+    background: linear-gradient(
+        135deg,
+        #FFFFFF,
+        #E9EDF2,
+        #D3DAE3,
+        #E9EDF2,
+        #FFFFFF
+    );
+
+    box-shadow:
+        0 10px 28px rgba(120,130,140,0.35),
+        inset 0 2px 6px rgba(255,255,255,1);
+}
 .ocr-status,
 .confidence-note,
 .badge-model {
