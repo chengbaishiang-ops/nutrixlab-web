@@ -70,29 +70,36 @@
     margin-top: 0.5rem; 
 }
 
-        :root {
-    --app-bg: #EEF5F9;
-    --app-bg-2: #E4EEF5;
-    --card-bg: rgba(255,255,255,0.82);
+     :root {
+    --app-bg: #F4F7FA;
+    --app-bg-2: #EDF2F6;
+
+    --card-bg: rgba(255,255,255,0.85);
     --card-border: rgba(255,255,255,0.7);
-    --text-main: #245674;
-    --text-soft: #6D93A8;
-    --primary: #6FA6C2;
-    --primary-deep: #4E87A7;
-    --shadow-soft: 0 10px 30px rgba(73, 114, 140, 0.10);
-    --shadow-card: 0 16px 40px rgba(59, 97, 122, 0.10);
+
+    --text-main: #2B3A44;
+    --text-soft: #7C8F9B;
+
+    /* 重點：科技銀主色 */
+    --primary: #8FA3B0;
+    --primary-deep: #5F7685;
+
+    --shadow-soft: 0 10px 30px rgba(80, 100, 120, 0.10);
+    --shadow-card: 0 18px 45px rgba(70, 90, 110, 0.12);
+
     --radius-xl: 28px;
     --radius-lg: 22px;
-    --radius-md: 18px;
+    --radius-md: 16px;
 }
 
 body {
     background:
-        radial-gradient(circle at top, rgba(125,170,196,0.18) 0%, rgba(125,170,196,0.06) 22%, rgba(255,255,255,0) 42%),
-        linear-gradient(180deg, var(--app-bg) 0%, var(--app-bg-2) 100%);
+        radial-gradient(circle at top, rgba(200,210,220,0.18) 0%, rgba(200,210,220,0.05) 30%, rgba(255,255,255,0) 55%),
+        linear-gradient(180deg, #F4F7FA 0%, #E9EFF4 100%);
+
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    padding: 1.4rem 1rem 2rem;
+    padding: 1rem 1rem 2rem;
     color: var(--text-main);
 }
 
@@ -154,13 +161,13 @@ body {
 }
 
 .main-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(255,255,255,0.88);
     border-radius: 32px;
     box-shadow: var(--shadow-card);
-    overflow: hidden;
-    border: 1px solid var(--card-border);
+    border: 1px solid rgba(255,255,255,0.75);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .upload-section {
@@ -175,11 +182,7 @@ body {
 }
 
 .upload-title h2 {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #2E6282;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
+    color: #3A4B57;
 }
 
 .upload-title p {
@@ -213,36 +216,31 @@ body {
     margin-bottom: 0.9rem;
 }
 
-.upload-zone p {
-    color: #4B7892;
-    font-weight: 600;
-    margin: 0.35rem 0;
-    line-height: 1.55;
+.upload-zone {
+    border: 2px dashed rgba(120,140,160,0.35);
+    background: rgba(255,255,255,0.6);
 }
 
 .upload-btn {
-    background: linear-gradient(180deg, #79B2CD 0%, #639CB9 100%);
+    background: linear-gradient(135deg, #9FB3C1, #6F8796);
     color: white;
     border: none;
-    padding: 14px 26px;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 1rem;
-    margin-top: 1rem;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.22s ease;
-    min-width: 240px;
-    box-shadow: 0 8px 20px rgba(99,156,185,0.22);
+    padding: 12px 26px;
+    border-radius: 40px;
+    font-weight: 600;
+
+    box-shadow: 
+        0 6px 18px rgba(90,110,130,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+
+    transition: all 0.2s ease;
 }
 
 .upload-btn:hover {
-    background: linear-gradient(180deg, #6EAACA 0%, #538CAB 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(99,156,185,0.28);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 10px 24px rgba(90,110,130,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.7);
 }
 
 .ocr-status,
