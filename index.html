@@ -101,10 +101,28 @@ body {
     margin: 0 auto;
 }
 
-.logo-section {
-    text-align: center;
-    margin-bottom: 1.6rem;
-    padding-top: 0.4rem;
+.logo-section::before {
+    content: "";
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 340px;
+    height: 150px;
+
+    background: radial-gradient(
+        ellipse at center,
+        rgba(235, 245, 255, 0.85) 0%,
+        rgba(190, 220, 240, 0.55) 28%,
+        rgba(135, 190, 220, 0.28) 52%,
+        rgba(110, 170, 205, 0.12) 70%,
+        rgba(255,255,255,0) 100%
+    );
+
+    filter: blur(22px);
+    z-index: 0;
+    pointer-events: none;
 }
 
 .logo-img {
@@ -113,13 +131,15 @@ body {
     height: auto;
     display: block;
     margin: 0 auto 0.7rem;
+    position: relative;
+    z-index: 1;
 
-    /* 高級銀藍發光（精修版） */
     filter:
-        brightness(1.08)
-        contrast(1.06)
-        drop-shadow(0 0 8px rgba(200, 225, 240, 0.45))
-        drop-shadow(0 0 18px rgba(120, 180, 210, 0.28));
+        brightness(1.12)
+        contrast(1.08)
+        drop-shadow(0 0 10px rgba(235,245,255,0.55))
+        drop-shadow(0 0 24px rgba(165,210,235,0.42))
+        drop-shadow(0 8px 22px rgba(105,155,185,0.22));
 }
         
 .tagline {
