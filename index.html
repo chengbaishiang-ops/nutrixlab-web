@@ -1167,14 +1167,20 @@ footer {
         padding-bottom: 0.4rem;
     }
     
-.preview-area {
-  opacity: 0;
-  height: 0;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
+.preview-area,
+.preview-area.show {
+  opacity: 0 !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+
+  display: none !important;
+  pointer-events: none !important;
 }
-    }
+    
     </style>
     
 </head>
