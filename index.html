@@ -1636,7 +1636,7 @@
         } else if (analysis.textLength < 80) {
             confNote.innerHTML = '<i class="fas fa-info-circle"></i> 识别文字较少，系统已启用结构化配对与较保守评分；建议上传更清晰完整的产品标签。';
         } else {
-            confNote.innerHTML = `<i class="fas fa-check-circle"></i> 基于${analysis.langHint}内容分析，已加入“证据库 + 成分-剂量配对 + 剂量判读”逻辑。`;
+            confNote.innerHTML = '';
         }
 
         const container = document.getElementById('dimensionsContainer');
