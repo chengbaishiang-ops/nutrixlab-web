@@ -219,7 +219,22 @@
             font-size: 1.12rem;
         }
 
-        .ocr-status,
+        .ocr-status {
+         margin-top: 4px;
+         margin-bottom: 6px;
+         font-size: 0.78rem;
+        }    
+
+        .ocr-spacing {
+         height: 12px;
+        }
+
+        @media (max-width: 768px) {
+        .ocr-spacing {
+         height: 6px;
+        }
+    }
+        
         .confidence-note,
         .badge-model {
             background: rgba(180,190,200,0.12);
