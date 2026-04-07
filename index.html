@@ -643,7 +643,7 @@
                 <p style="font-size: 0.75rem;">JPG / PNG | 自动提取中英文营养成分与认证信息</p>
                 <input type="file" id="imageUpload" accept="image/*" style="display: none;">
                 <button class="upload-btn" id="triggerUploadBtn"><i class="fas fa-camera"></i> 选择图片 / 拍照上传</button>
-                <div id="ocrStatus" class="ocr-status"></div>
+                <div id="ocrStatus" class="ocr-status" style="display:none;"></div>
             </div>
             <div id="previewArea" class="preview-area">
                 <div class="preview-text" id="previewText"></div>
@@ -1692,6 +1692,7 @@
         const previewText = document.getElementById('previewText');
         const langHintDiv = document.getElementById('detectedLangHint');
 
+        statusDiv.style.display = 'inline-block';
         statusDiv.innerHTML = '<span class="loading-spinner"></span> AI 正在识别产品标签内容...';
         previewArea.classList.remove('show');
         langHintDiv.innerHTML = '';
