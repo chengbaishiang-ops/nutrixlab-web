@@ -1637,6 +1637,7 @@
             confNote.innerHTML = '<i class="fas fa-info-circle"></i> 识别文字较少，系统已启用结构化配对与较保守评分；建议上传更清晰完整的产品标签。';
         } else {
             confNote.innerHTML = '';
+            confNote.style.display = 'none';
         }
 
         const container = document.getElementById('dimensionsContainer');
