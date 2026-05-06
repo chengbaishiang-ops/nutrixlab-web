@@ -763,29 +763,7 @@
         { key: 'collagen', label: 'Collagen', patterns: [/collagen/i, /胶原蛋白/] },
         { key: 'coq10', label: 'CoQ10', patterns: [/coq\s*10/i, /coq\s*1[o0]/i, /coenzyme\s*q\s*10/i, /辅酶q\s*10/i, /辅酶q\s*1[o0]/i, /辅酶\s*q/i, /\bq10\b/i] }
     ];
-    { 
- key: 'ashwagandha',
- label: 'Ashwagandha',
- patterns: [/ashwagandha/i, /印度人参|南非醉茄/i]
-},
-
- key: 'lutein',
- label: 'Lutein',
- patterns: [/lutein/i, /叶黄素/i]
-},
-
-{
- key: 'melatonin',
- label: 'Melatonin',
- patterns: [/melatonin/i, /褪黑素/i]
-},
-
-{
- key: 'creatine',
- label: 'Creatine',
- patterns: [/creatine/i, /肌酸/i]
-},
-
+ 
     const DOSAGE_RULES = {
         'Vitamin A': { effectiveMinMcg: 300, upperMcg: 3000, cautionMcg: 2500 },
         'Vitamin B6': { effectiveMinMg: 1.3, upperMg: 100, cautionMg: 50 },
@@ -817,45 +795,6 @@
         'Chondroitin': { evidenceTier: 'B+', baseScore: 16, effectiveMinMg: 200, strongDoseMg: 800, label: '软骨素（常见于关节复方）' },
         'Omega-3': { evidenceTier: 'A', baseScore: 20, effectiveMinMg: 500, strongDoseMg: 1000, label: 'Omega-3（EPA/DHA 方向研究较多）' },
         'CoQ10': { evidenceTier: 'B+', baseScore: 15, effectiveMinMg: 30, strongDoseMg: 100, label: 'CoQ10（心血管/能量方向有人体研究）' },
-        'Ashwagandha': {
- evidenceTier: 'B+',
- baseScore: 16,
- effectiveMinMg: 300,
- strongDoseMg: 600,
- label: '印度人参（压力与睡眠方向研究较多）'
-},
-
-'Lutein': {
- evidenceTier: 'A-',
- baseScore: 18,
- effectiveMinMg: 10,
- strongDoseMg: 20,
- label: '叶黄素（眼部健康研究较完整）'
-},
-
-'Melatonin': {
- evidenceTier: 'A',
- baseScore: 22,
- effectiveMinMg: 1,
- strongDoseMg: 5,
- label: '褪黑素（睡眠方向临床证据较强）'
-},
-
-'Creatine': {
- evidenceTier: 'A',
- baseScore: 24,
- effectiveMinMg: 3000,
- strongDoseMg: 5000,
- label: '肌酸（运动表现证据非常强）'
-},
-
-'Curcumin': {
- evidenceTier: 'B+',
- baseScore: 18,
- effectiveMinMg: 500,
- strongDoseMg: 1000,
- label: '姜黄素（抗炎方向有人体研究）'
-},
         'Probiotic': { evidenceTier: 'B', baseScore: 14, label: '益生菌（证据受菌株与活菌数影响）' },
         'Collagen': { evidenceTier: 'B', baseScore: 12, effectiveMinMg: 2500, strongDoseMg: 5000, label: '胶原蛋白（美容/关节方向有人体研究）' },
         'Hyaluronic Acid': { evidenceTier: 'B', baseScore: 11, effectiveMinMg: 1, strongDoseMg: 60, label: '透明质酸（口服证据有限但存在）' },
